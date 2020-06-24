@@ -1,0 +1,21 @@
+_BASE_: "../Base-RCNN-DilatedC5.yaml"
+MODEL:
+  WEIGHTS: "detectron2://ImageNetPretrained/MSRA/R-50.pkl"
+  MASK_ON: False
+  RESNETS:
+    DEPTH: 50
+  ROI_HEADS:
+    NUM_CLASSES: 352
+    SCORE_THRESH_TEST: 0.0001
+DATASETS:
+  TRAIN: ("openlogo_trainval",)
+  TEST: ("openlogo_test",)
+SOLVER:
+  MAX_ITER: 45000       # images: 18752 -> 1 GPU: 12 epochs --> 225.024 iters
+  LR_SCHEDULER_NAME: "WarmupCosineLR"
+  # STEPS: (27000, 36000) # 8epochs - 10epochs Only for MultiStepScheduler
+  IMS_PER_BATCH: 16
+  BASE_LR: 0.02
+  WARMUP_ITERS: 2000
+INPUT:
+  MIN_SIZE_TRAIN: (480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800)

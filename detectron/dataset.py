@@ -59,17 +59,11 @@ CLASS_NAMES = ['3m', 'abus', 'accenture', 'adidas', 'adidas1', 'adidas_text', 'a
 # fmt: on
 
 
-def load_openlogo_instances(dirname: str, supervision: str, split: str):
-    """
-    Load Pascal VOC detection annotations to Detectron2 format.
-    Args:
-        dirname: Contain "Annotations", "ImageSets", "JPEGImages"
-        split (str): one of "train", "test", "val", "trainval"
-    """
+def get_logo_dicts(dirname: str, supervision: str, split: str):
+
     with PathManager.open(os.path.join(dirname, "ImageSets", "supervision_type", supervision, split + ".txt")) as f:
         fileids = np.loadtxt(f, dtype=np.str)
 
-    # cls_set = set()
     dicts = []
     for fileid in tqdm.tqdm(fileids, desc='Reading annotations'):
         anno_file = os.path.join(dirname, "Annotations", fileid + ".xml")
@@ -87,19 +81,9 @@ def load_openlogo_instances(dirname: str, supervision: str, split: str):
 
         for obj in tree.findall("object"):
             cls = obj.find("name").text
-            # if cls not in cls_set:
-            #     cls_set.add(cls)
-            # We include "difficult" samples in training.
-            # Based on limited experiments, they don't hurt accuracy.
-            # difficult = int(obj.find("difficult").text)
-            # if difficult == 1:
-            # continue
+
             bbox = obj.find("bndbox")
             bbox = [float(bbox.find(x).text) for x in ["xmin", "ymin", "xmax", "ymax"]]
-            # Original annotations are integers in the range [1, W or H]
-            # Assuming they mean 1-based pixel indices (inclusive),
-            # a box with annotation (xmin=1, xmax=W) covers the whole image.
-            # In coordinate space this is represented by (xmin=0, xmax=W)
             bbox[0] -= 1.0
             bbox[1] -= 1.0
 
@@ -115,8 +99,10 @@ def load_openlogo_instances(dirname: str, supervision: str, split: str):
 def register_openlogo(name, dirname, split, supervision):
 
     DatasetCatalog.register(
-        name, lambda: load_openlogo_instances(
+        name, lambda: get_logo_dicts(
             dirname, supervision, split))
     MetadataCatalog.get(name).set(
         thing_classes=CLASS_NAMES, dirname=dirname, supervision=supervision, split=split
     )
+
+

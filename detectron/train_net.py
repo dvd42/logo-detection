@@ -1,11 +1,14 @@
 from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, hooks, launch
+from detectron2.data import MetadataCatalog
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.utils.logger import setup_logger
 from detectron2.evaluation import verify_results
 import detectron2.utils.comm as comm
 
-from data.dataset import register_openlogo
+from dataset import register_openlogo
+from evaluator import OpenLogoDetectionEvaluator
+from visualizer import visualize
 
 
 def setup(args):
@@ -23,9 +26,13 @@ def setup(args):
 def main(args):
 
     cfg = setup(args)
-    register_openlogo("openlogo_train", "data/datasets/openlogo", "train", "supervised_imageset")
-    register_openlogo("openlogo_val", "data/datasets/openlogo", "val", "supervised_imageset")
+    show = True
+
+    register_openlogo(cfg.DATASETS.TRAIN[0], "../data/datasets/openlogo", "trainval", "supervised_imageset")
+    register_openlogo(cfg.DATASETS.TEST[0], "../data/datasets/openlogo", "test", "supervised_imageset")
     trainer = DefaultTrainer(cfg)
+
+    evaluator = OpenLogoDetectionEvaluator(cfg.DATASETS.TEST[0])
 
     if args.eval_only:
 
@@ -34,7 +41,11 @@ def main(args):
             cfg.MODEL.WEIGHTS, resume=args.resume
         )
 
-        res = trainer.test(cfg, model)
+        if show:
+            visualize(cfg, amount=20)
+
+
+        res = trainer.test(cfg, model, evaluators=[evaluator])
 
         if comm.is_main_process():
             verify_results(cfg, res)
@@ -52,8 +63,6 @@ def main(args):
         )
 
     return trainer.train()
-
-
 
 if __name__ == "__main__":
 
