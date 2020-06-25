@@ -28,8 +28,8 @@ def main(args):
     cfg = setup(args)
     show = True
 
-    register_openlogo(cfg.DATASETS.TRAIN[0], "../data/datasets/openlogo", "trainval", "supervised_imageset")
-    register_openlogo(cfg.DATASETS.TEST[0], "../data/datasets/openlogo", "test", "supervised_imageset")
+    register_openlogo(cfg.DATASETS.TRAIN[0], "datasets/data/openlogo", "trainval", "supervised_imageset")
+    register_openlogo(cfg.DATASETS.TEST[0], "datasets/data/openlogo", "test", "supervised_imageset")
     trainer = DefaultTrainer(cfg)
 
     evaluator = OpenLogoDetectionEvaluator(cfg.DATASETS.TEST[0])
